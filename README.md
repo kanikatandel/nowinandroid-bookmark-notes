@@ -43,21 +43,7 @@ The project uses dependency injection with Hilt. Most data layer components are 
 
 > **Note:** Do not run `./gradlew test` or `./gradlew connectedAndroidTest` — those execute tests against all build variants, which will fail. Only the `demoDebug` variant has tests.
 
----
-
-# Technical Assessment
-
-You have **80 minutes** to complete the task below. You are free to use any LLM tools available to you.
-
-You are evaluated on:
-- **Functional completeness** — does it work as described?
-- **Architecture fit** — does your code follow the patterns already in the codebase?
-- **Code quality** — is it clean, testable, and maintainable?
-- **Testing** — did you write meaningful tests?
-
-You are **free to choose your own technical approach**. The requirements below describe *what* the feature should do, not *how* to build it.
-
----
+--
 
 ## Enhanced Bookmark Management — Notes & Multi-Select
 
