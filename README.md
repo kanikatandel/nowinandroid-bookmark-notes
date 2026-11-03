@@ -2,6 +2,8 @@
 
 A fully functional Android app built with Kotlin and Jetpack Compose. Users can browse Android development news, follow topics, receive notifications for new content, and bookmark articles.
 
+This fork of [Now in Android](https://github.com/android/nowinandroid) adds **bookmark notes** and **multi-select bookmark management**. See [Bookmark Notes & Multi-Select](#bookmark-notes--multi-select).
+
 ## Architecture
 
 The app follows [official architecture guidance](https://developer.android.com/topic/architecture) and is described in detail in the [architecture learning journey](docs/ArchitectureLearningJourney.md). Modularization strategy is covered in the [modularization learning journey](docs/ModularizationLearningJourney.md).
@@ -43,43 +45,35 @@ The project uses dependency injection with Hilt. Most data layer components are 
 
 > **Note:** Do not run `./gradlew test` or `./gradlew connectedAndroidTest` — those execute tests against all build variants, which will fail. Only the `demoDebug` variant has tests.
 
---
+## Bookmark Notes & Multi-Select
 
-## Enhanced Bookmark Management — Notes & Multi-Select
+### Bookmark notes
 
-The Bookmarks screen currently supports only basic save/unsave of articles. Enhance it with two capabilities: personal notes on bookmarked articles, and a multi-select mode for bulk management.
+- When you bookmark an article on For You, Topic or Search, a dialog lets you add an optional personal note (plain text, max 280 characters). Tap **Skip** to bookmark without a note.
+- On the Saved (Bookmarks) screen, a note appears below its article's title. Tap the note to edit or delete it.
+- Notes are stored in Proto DataStore, so they persist across app restarts.
+- A note only exists while its article is bookmarked: removing the bookmark also deletes the note. Notes are trimmed, and saving a blank note deletes it.
 
-### What We Want
+### Multi-select on the Saved screen
 
-**Bookmark notes:**
-- When a user bookmarks an article (from any screen), show an optional text field where they can type a personal note (max 280 characters).
-- Users should be able to skip adding a note — bookmarking without a note is still valid.
-- On the Bookmarks screen, articles that have a note should display the note text below the article title.
-- Users should be able to edit or delete an existing note by tapping on it.
-- Notes must persist across app restarts.
-- When an article is unbookmarked, its associated note must be automatically deleted.
+- Tap **Select** in the toolbar, or long-press an article, to enter selection mode.
+- In selection mode, each article shows a checkbox and tapping an article toggles it. The toolbar shows how many are selected, plus **Select all** / **Deselect all**, **Remove** and **Cancel selection**.
+- **Remove** deletes all selected bookmarks and their notes at once, then exits selection mode. A single **UNDO** snackbar restores every removed bookmark together with its note.
+- Tap **Cancel selection** or press Back to leave selection mode without removing anything.
+- Note editing is turned off in selection mode. Removing a single bookmark outside selection mode works as before.
 
-**Multi-select mode:**
-- A way to enter "selection mode" on the Bookmarks screen (e.g., long-press on an article, or an "Edit" button).
-- In selection mode:
-  - Each article shows a checkbox.
-  - Users can tap to select/deselect individual articles.
-  - A "Select All" option is available.
-  - A counter shows how many items are selected (e.g., "3 selected").
-  - A "Remove" action removes all selected bookmarks at once.
-- After bulk removal, show a single undo snackbar that restores ALL removed bookmarks — including their notes — in one action.
-- A way to exit selection mode without taking action (e.g., a "Cancel" button or back press).
-- Selection mode should be exited automatically after a bulk action is performed.
+### Scope
 
-**How they interact:**
-- Bulk-removing bookmarks must also clean up all associated notes. Undo must restore both the bookmarks and their notes together.
-- In selection mode, tapping an article should toggle its checkbox — not open its note for editing. Note editing should only be available outside of selection mode.
-- The single-item unbookmark behavior that already exists should continue to work as-is outside of selection mode.
+- Notes are plain text only (no formatting or images) and can only be attached to bookmarked articles.
+- Notes are shown only on the Saved screen.
+- Multi-select is available only on the Saved screen, and remove is the only bulk action.
 
-### What We Don't Want
+### Where the code lives
 
-- Do NOT support rich text, images, or formatting in notes — plain text only.
-- Do NOT add notes to non-bookmarked articles.
-- Do NOT show notes on screens other than the Bookmarks screen.
-- Do NOT add multi-select to any other screen — only the Bookmarks screen.
-- Do NOT add additional bulk actions beyond remove (no bulk "share", "export", or "move to folder").
+| Layer | Location |
+| --- | --- |
+| Model | `core/model/.../data/BookmarkNote.kt` (`BOOKMARK_NOTE_MAX_LENGTH`) |
+| Storage | `core/datastore-proto/.../user_preferences.proto` (`bookmark_notes`), `core/datastore/.../NiaPreferencesDataSource.kt` |
+| Repository | `core/data/.../repository/UserDataRepository.kt` (`setBookmarkNote`, `removeBookmarks`, `restoreBookmarks`) |
+| Note dialog | `core/ui/.../BookmarkNoteDialog.kt` |
+| Saved screen | `feature/bookmarks/impl/.../BookmarksScreen.kt`, `BookmarksViewModel.kt` |
